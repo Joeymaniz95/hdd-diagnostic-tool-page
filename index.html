@@ -6,6 +6,9 @@
   <title>Hard Drive Diagnostic Tool — Free Step-by-Step Data Recovery Guide | MDRepairs</title>
   <meta name="description" content="Use our free hard drive diagnostic tool to identify failure type and follow a safe, clone-first recovery path. Covers ddrescue commands, R-Studio file recovery, and clear hard-stop warnings for clicking, non-spinning, and failing drives." />
   <link rel="canonical" href="https://mdrepairs.com/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" />
   <link rel="stylesheet" href="styles.css" />
 
   <!-- ── FAQPage Schema ── -->
@@ -107,7 +110,7 @@
         "name": "Do you offer professional cleanroom data recovery?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. MDRepairs offers professional data recovery including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We offer a free evaluation and a no-data, no-charge policy — you only pay if your data is successfully recovered."
+          "text": "Yes. MDRepairs offers professional data recovery including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We offer a professional diagnostic evaluation and a no-data, no-charge policy — you only pay if your data is successfully recovered."
         }
       }
     ]
@@ -198,20 +201,6 @@
 </head>
 
 <body>
-  <a href="#main-content" class="skip-link">Skip to main content</a>
-
-  <!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
-  <header>
-    <div class="container">
-      <div class="header-inner">
-        <a href="https://mdrepairs.com/" class="site-logo">MD<span>Repairs</span></a>
-        <nav aria-label="Site navigation">
-          <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener">Mail-In Recovery</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-
   <!-- ═══════════════════════════════════════ MAIN ════════════════════════════════════════ -->
   <main id="main-content">
     <div class="container">
@@ -261,48 +250,50 @@
           </div>
 
           <!-- ── Full-screen modal ── -->
-          <div
-            class="hdd-modal"
-            id="hddModal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Hard Drive Diagnostic Tool — Full Screen"
-            aria-hidden="true"
-            hidden
-          >
+          <div class="hdd-modal" id="hddModal" role="dialog" aria-modal="true" aria-label="Hard Drive Diagnostic Tool — Full Screen" aria-hidden="true">
             <div class="hdd-modal-backdrop" id="hddModalBackdrop"></div>
-            <div class="hdd-modal-content">
+            <div class="hdd-modal-content" id="hddModalContent">
               <button class="hdd-modal-close" id="hddModalClose" aria-label="Close full screen tool">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </button>
-              <iframe
-                src="https://hdd-diagnostic-wizard.vercel.app/"
-                title="Hard Drive Diagnostic Tool — Interactive Step-by-Step Wizard — Full Screen"
-                allowfullscreen
-              ></iframe>
             </div>
           </div>
 
           <script>
             (function () {
-              var btn      = document.getElementById('hddExpandBtn');
-              var modal    = document.getElementById('hddModal');
-              var closeBtn = document.getElementById('hddModalClose');
-              var backdrop = document.getElementById('hddModalBackdrop');
+              var btn          = document.getElementById('hddExpandBtn');
+              var modal        = document.getElementById('hddModal');
+              var modalContent = document.getElementById('hddModalContent');
+              var closeBtn     = document.getElementById('hddModalClose');
+              var backdrop     = document.getElementById('hddModalBackdrop');
+              var inlineWrap   = document.querySelector('.iframe-wrap');
+              var iframe       = inlineWrap.querySelector('iframe');
               var lastFocus;
+              var isOpen       = false;
 
               function openModal() {
+                if (isOpen) return;
+                isOpen = true;
                 lastFocus = document.activeElement;
-                modal.hidden = false;
-                modal.removeAttribute('aria-hidden');
+                modalContent.appendChild(iframe);
+                modal.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
+                /* Force reflow so the transition starts from the initial state */
+                modal.offsetHeight;
+                modal.classList.add('is-open');
                 closeBtn.focus();
               }
 
               function closeModal() {
-                modal.hidden = true;
+                if (!isOpen) return;
+                isOpen = false;
+                modal.classList.remove('is-open');
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
+                /* Wait for the CSS transition to finish before moving the iframe back */
+                setTimeout(function () {
+                  if (!isOpen) inlineWrap.appendChild(iframe);
+                }, 300);
                 if (lastFocus) lastFocus.focus();
               }
 
@@ -311,7 +302,7 @@
               backdrop.addEventListener('click', closeModal);
 
               document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && !modal.hidden) closeModal();
+                if (e.key === 'Escape' && isOpen) closeModal();
               });
 
               modal.addEventListener('keydown', function (e) {
@@ -673,7 +664,7 @@
           <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
             Stop powering the drive on and off. Each power cycle applies stress to an already-failed
             component and can worsen the damage. Your data is very likely still on the platters —
-            but only a professional recovery lab can reach it.
+            but only a professional recovery lab can reach it. If you are not near a local recovery facility, you can <a href="https://mdrepairs.com/mail-in-repair/">send your drive for evaluation</a> through a secure mail-in process.
           </p>
           <div class="cta-group">
             <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
@@ -691,13 +682,13 @@
           </p>
           <ul>
             <li><strong>What is happening:</strong> One or more read/write heads have failed. The drive cannot complete its startup or find the data it is looking for.</li>
-            <li><strong>Why each power cycle makes it worse:</strong> When a drive with a failed head spins up, the head can drag across the platter surface instead of floating above it. This physically scratches the magnetic coating where your data is stored. Even a single additional power cycle can reduce how much is recoverable.</li>
+            <li><strong>Why each power cycle makes it worse:</strong> When a drive with a failed head spins up, the head can drag across the platter surface instead of floating above it. This physically scratches the magnetic coating where your data is stored — a type of <a href="https://mdrepairs.com/scratched-platter-hard-drive-data-recovery/">platter damage</a> that drastically reduces recovery success if left unaddressed. Even a single additional power cycle can reduce how much is recoverable.</li>
             <li><strong>Why software tools cannot help:</strong> ddrescue and R-Studio communicate with the drive through the operating system. If the heads cannot read the system area, the drive is either invisible to the OS or goes offline almost immediately. There is no software workaround for a hardware head failure.</li>
             <li><strong>What professional recovery involves:</strong> The head stack assembly is replaced in a certified cleanroom with a matched set from a compatible donor drive. Once working heads are installed, technicians image the drive sector by sector and extract your files.</li>
           </ul>
           <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
             Stop powering the drive on. Do not run scans or cloning attempts. Do not open the
-            drive outside a cleanroom. Contact a professional immediately — the fewer additional
+            drive outside a cleanroom. Contact a <a href="https://mdrepairs.com/hard-drive-data-recovery/">professional hard drive data recovery</a> service immediately — the fewer additional
             power cycles, the better your chances.
           </p>
           <div class="cta-group">
@@ -722,7 +713,7 @@
           </ul>
           <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
             Stop all DIY attempts. Do not run scans. Do not open the drive outside a cleanroom.
-            The sooner the drive is evaluated by a professional, the better your recovery chances.
+            The sooner the drive receives a <a href="https://mdrepairs.com/hard-drive-data-recovery/">professional data recovery evaluation</a>, the better your recovery chances. MDRepairs also offers a <a href="https://mdrepairs.com/mail-in-repair/">mail-in data recovery</a> option if you are not located near a recovery lab.
           </p>
           <div class="cta-group">
             <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
@@ -766,7 +757,7 @@
             <li>Professional recovery is strongly recommended. Do not attempt further DIY.</li>
           </ul>
           <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
-            Do not continue DIY. Professional evaluation is needed before the drive degrades further.
+            Do not continue DIY. A <a href="https://mdrepairs.com/hard-drive-data-recovery/">hard drive data recovery</a> professional should evaluate the drive before it degrades further.
           </p>
           <div class="cta-group">
             <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
@@ -1060,7 +1051,7 @@
           <li class="faq-item">
             <details>
               <summary>Do you offer cleanroom data recovery?</summary>
-              <p>Yes. MDRepairs offers professional data recovery services including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We offer a free evaluation and a no-data, no-charge policy — you only pay if your data is successfully recovered.</p>
+              <p>Yes. MDRepairs offers professional data recovery services including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We provide a professional lab evaluation to determine the root cause of failure, backed by a no-data, no-charge policy — you only pay if your data is successfully recovered.</p>
             </details>
           </li>
 
@@ -1081,18 +1072,21 @@
         <div class="card" style="margin-bottom: 20px;">
           <p>
             If the diagnostic tool or this guide has identified a failure that is beyond DIY
-            recovery, professional data recovery is the appropriate next step. MDRepairs offers
-            evaluation and recovery services for drives with physical and firmware-level failures.
+            recovery, <a href="https://mdrepairs.com/hard-drive-data-recovery/">professional hard drive data recovery services</a> are the appropriate next step. MDRepairs offers
+            evaluation and recovery for drives with physical and firmware-level failures.
+          </p>
+          <p>
+            Not near a recovery lab? Our <a href="https://mdrepairs.com/mail-in-repair/">mail-in data recovery</a> program lets you securely ship your drive for a professional diagnostic evaluation — no commitment required, and you only pay if data is successfully recovered.
           </p>
           <ul class="benefit-list">
             <li>Professional cleanroom environment for head stack replacement and motor repair</li>
             <li>PCB repair, ROM chip transfer, and MCU-level work for non-spinning drives</li>
             <li>Firmware-level recovery and bypass for drives with identification failures</li>
-            <li>Free evaluation — no data recovered means no charge to you</li>
+            <li>Professional drive assessment available — no data recovered means no charge to you</li>
           </ul>
           <div class="cta-group">
             <a href="#quote" class="btn btn-primary">Get a Professional Recovery Quote</a>
-            <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener" class="btn btn-secondary">Learn About Our Mail-In Recovery ↗</a>
+            <a href="https://mdrepairs.com/mail-in-repair/" class="btn btn-secondary">Learn About Our Mail-In Recovery →</a>
           </div>
         </div>
 
@@ -1168,22 +1162,6 @@
     </div><!-- /.container -->
   </main>
 
-  <!-- ═══════════════════════════════════════ FOOTER ══════════════════════════════════════ -->
-  <footer>
-    <div class="container">
-      <p>
-        &copy; 2026
-        <a href="https://mdrepairs.com/">MDRepairs</a>
-        &mdash;
-        Professional Data Recovery
-        &mdash;
-        <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener">Mail-In Recovery</a>
-      </p>
-      <p style="margin-top: 6px;">
-        This guide is provided for educational purposes. Results vary by drive condition and failure type.
-      </p>
-    </div>
-  </footer>
 
 </body>
 </html>
