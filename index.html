@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hard Drive Diagnostic Tool — Free Step-by-Step Data Recovery Guide | MDRepairs</title>
+  <meta name="description" content="Use our free hard drive diagnostic tool to identify failure type and follow a safe, clone-first recovery path. Covers ddrescue commands, R-Studio file recovery, and clear hard-stop warnings for clicking, non-spinning, and failing drives." />
+  <link rel="canonical" href="https://mdrepairs.com/" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- ── FAQPage Schema ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a hard drive diagnostic tool?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A hard drive diagnostic tool is software or an interactive guide that helps you identify what is wrong with a failing hard drive. It evaluates symptoms like spinning behavior, unusual sounds, SMART health status, and whether the drive is detected by the computer — then routes you to the safest recovery path or advises professional help when DIY is not possible."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why should I clone the drive before recovering files?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cloning first protects your data. Scanning or recovering files directly from a failing patient drive stresses it further and can permanently overwrite sectors that still contain recoverable data. By creating a full sector-level copy with ddrescue onto a healthy target drive, you preserve the original state and do all file recovery work from the copy — never the original."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What should I do if my hard drive is clicking?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Stop powering the drive on immediately. Clicking is a clear sign of a read/write head failure. Each additional power cycle risks the failed head dragging across the platter surface and scratching away your data. Software recovery tools cannot address this. Professional cleanroom head-stack replacement using a matched donor drive is required."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What should I do if my hard drive is not spinning?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A non-spinning drive indicates PCB (circuit board) failure or a seized spindle motor. DIY PCB swaps require matching a donor board exactly and transferring the ROM chip — and on many drives manufactured after 2013, also transferring the MCU (microcontroller unit). Both require professional microsoldering or BGA rework equipment. Motor seizure requires cleanroom disassembly. Stop all power cycles and contact a professional."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does it mean if my hard drive spins up then spins down?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "This pattern means the drive starts its startup sequence, attempts to initialize its read/write heads, fails, and shuts itself down as a self-protection mechanism. It indicates a head failure. Software tools like ddrescue cannot help because the drive powers down before any data transfer can begin. Professional cleanroom head replacement is required. Do not continue powering the drive on."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What if my drive is not detected in CrystalDiskInfo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "If the drive does not appear in CrystalDiskInfo, the computer is not communicating with it properly. For external drives, the USB-to-SATA bridge inside the enclosure may be failing — try removing the drive from the enclosure and connecting it directly via SATA. If it still is not detected, firmware issues or deeper hardware failure may be present. Do not continue DIY attempts; professional evaluation is needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I save recovered files to my computer's internal drive?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, as long as the internal drive has enough available free space. The critical rule is: never save recovered files to the cloned drive or the original patient drive. Your destination can be a separate external drive (recommended) or your computer's internal drive — either is acceptable as long as it is neither the clone nor the patient drive."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is ddrescue and how does it work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "GNU ddrescue is a data recovery tool that creates a sector-level copy of a failing drive onto a healthy target drive. It skips difficult sectors on the first pass to minimize stress on the failing drive, then retries them in a second pass. A log file tracks everything so the operation can be paused and resumed safely without re-copying already-transferred data. It runs from a bootable Linux environment such as SystemRescue."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is R-Studio and when should I use it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "R-Studio is a professional file recovery application for Windows. After cloning your patient drive with ddrescue, you connect the cloned drive externally to your Windows machine and scan it with R-Studio to locate and recover deleted, lost, or inaccessible files. You always work from the clone — never from the original patient drive."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does CrystalDiskInfo 'Bad' status mean?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Bad SMART status in CrystalDiskInfo means one or more critical drive health attributes have exceeded their failure threshold. The drive is actively failing. Continuing DIY recovery on a drive in this state can permanently destroy data that would otherwise be recoverable. Professional recovery is strongly recommended — do not continue DIY attempts."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Should I run CHKDSK on a failing drive?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Never run CHKDSK on the original failing patient drive. CHKDSK writes to the drive, which can overwrite sectors containing recoverable data and corrupt file system structures that recovery software relies on. If CHKDSK is needed at all, run it only on the cloned copy — never on the patient drive."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you offer professional cleanroom data recovery?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. MDRepairs offers professional data recovery including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We offer a free evaluation and a no-data, no-charge policy — you only pay if your data is successfully recovered."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- ── HowTo Schema ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Recover Data from a Failing Hard Drive (Clone-First Method)",
+    "description": "A step-by-step guide to safely recovering data from a failing hard drive by cloning it with ddrescue, scanning the clone with R-Studio, and recovering files to a safe destination drive.",
+    "totalTime": "PT8H",
+    "supply": [
+      { "@type": "HowToSupply", "name": "Working Windows computer" },
+      { "@type": "HowToSupply", "name": "USB flash drive (8 GB or larger)" },
+      { "@type": "HowToSupply", "name": "Target drive — same size or larger than the patient drive, completely empty" },
+      { "@type": "HowToSupply", "name": "Failing patient drive" },
+      { "@type": "HowToSupply", "name": "SATA docking station or USB-to-SATA adapter" },
+      { "@type": "HowToSupply", "name": "Destination drive for recovered files (separate external drive or internal drive with sufficient free space)" }
+    ],
+    "tool": [
+      { "@type": "HowToTool", "name": "CrystalDiskInfo (Windows, free)" },
+      { "@type": "HowToTool", "name": "SystemRescue ISO (free bootable Linux environment)" },
+      { "@type": "HowToTool", "name": "Rufus (Windows USB flashing tool, free)" },
+      { "@type": "HowToTool", "name": "GNU ddrescue (included in SystemRescue)" },
+      { "@type": "HowToTool", "name": "R-Studio (Windows, paid with free trial)" }
+    ],
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Check drive health with CrystalDiskInfo",
+        "text": "Download and install CrystalDiskInfo on Windows. Open it and find your drive in the list. Note the SMART health status. If Good or Caution, proceed with DIY cloning. If Bad or the drive is not detected, stop and contact a professional recovery lab."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Create a bootable SystemRescue USB (Windows only)",
+        "text": "On a Windows PC, download the SystemRescue ISO from system-rescue.org and Rufus from rufus.ie. Insert an 8 GB or larger USB flash drive. Open Rufus, select the ISO, click Start, and wait for it to finish. Do not remove the USB early."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Boot from the SystemRescue USB",
+        "text": "With the USB plugged in, restart the computer and press your boot menu key as the logo appears (F12 for Dell, F9 for HP, F12 for Lenovo, etc.). Select the USB drive and load SystemRescue. Choose the default boot option. You will arrive at a command-line prompt."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 4,
+        "name": "Identify drives with lsblk",
+        "text": "At the command prompt, type lsblk and press Enter. This lists all connected drives with device names and sizes. Match your patient drive (failing) and target drive (empty) by their known sizes. Confirm device names with absolute certainty before running ddrescue."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 5,
+        "name": "Run ddrescue Pass 1 — fast copy",
+        "text": "Run: ddrescue -f -n /dev/sdX /dev/sdY rescue.log (replacing sdX with the patient drive and sdY with the target drive). This copies all readable sectors quickly while skipping difficult ones. Let it complete fully."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 6,
+        "name": "Run ddrescue Pass 2 — retry difficult sectors",
+        "text": "After Pass 1 finishes, run: ddrescue -d -f -r3 /dev/sdX /dev/sdY rescue.log. This retries sectors that could not be read in Pass 1, using the same log file so it resumes where it left off. This pass may take many hours on a damaged drive."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 7,
+        "name": "Prepare for file recovery — disconnect patient, connect clone",
+        "text": "Shut down the computer completely. Disconnect the original patient drive and store it safely. Remove the SystemRescue USB. Boot normally into Windows. Then connect the cloned target drive as an external secondary drive via a USB docking station. Do not boot from it and click Cancel if Windows offers to repair it."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 8,
+        "name": "Scan the clone with R-Studio",
+        "text": "Install R-Studio from r-studio.com on Windows. Open it, select the cloned drive in the left panel (not your system drive), and click Scan with default settings. Wait for the scan to complete fully."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 9,
+        "name": "Recover files to a safe destination",
+        "text": "Browse R-Studio's results and check the files and folders you want to recover. Click Recover and choose a destination: a separate external drive or your computer's internal drive if it has enough free space. Never save to the cloned drive or the patient drive. Verify the recovered files can be opened when done."
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a href="https://mdrepairs.com/" class="site-logo">MD<span>Repairs</span></a>
+        <nav aria-label="Site navigation">
+          <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener">Mail-In Recovery</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ MAIN ════════════════════════════════════════ -->
+  <main id="main-content">
+    <div class="container">
+
+      <!-- ── HERO ── -->
+      <section class="hero" aria-label="Introduction">
+        <span class="last-updated">Last updated: February 22, 2026</span>
+        <h1>Hard Drive Diagnostic Tool</h1>
+        <p class="hero-lead">
+          Walk through your drive's symptoms step by step with the free interactive tool below.
+          Based on what the drive does when powered on — and what CrystalDiskInfo reports — the
+          wizard identifies whether a safe clone-first DIY recovery is possible, or whether
+          professional cleanroom service is the only path forward.
+        </p>
+
+        <div class="callout callout-danger" role="note" aria-label="Critical safety rules before starting">
+          <h4>Important Safety Notes — Read Before You Start</h4>
+          <ul style="padding-left: 18px; margin-top: 10px; color: #fca5a5; font-size: 15px; line-height: 1.85;">
+            <li><strong>Always clone first.</strong> Never scan or recover files directly from the failing patient drive.</li>
+            <li><strong>Patient drive</strong> = your original failing drive. Treat it as read-only. Minimize power cycles.</li>
+            <li><strong>Target drive</strong> = the empty drive you clone onto. Must be the same size or larger than the patient.</li>
+            <li><strong>Destination drive</strong> = where recovered files are saved. Never the clone and never the patient.</li>
+            <li><strong>Do NOT run CHKDSK, Format, Initialize Disk, or Repair prompts</strong> on the patient drive.</li>
+            <li><strong>Do NOT boot from the cloned drive.</strong> Connect it externally via a USB dock for scanning only.</li>
+            <li><strong>Do NOT let Windows automatically repair</strong> the cloned drive. Click Cancel on any repair prompts.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ── IFRAME EMBED ── -->
+      <section class="iframe-section" aria-label="Interactive hard drive diagnostic wizard">
+        <p class="iframe-caption">Interactive tool — use the wizard below to assess your specific drive</p>
+        <div class="iframe-wrap">
+          <iframe
+            src="https://hdd-diagnostic-wizard.vercel.app/"
+            title="Hard Drive Diagnostic Tool — Interactive Step-by-Step Wizard"
+            loading="lazy"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- ── JUMP NAV ── -->
+      <nav class="jump-nav" aria-label="Page section navigation">
+        <p class="jump-nav-heading">Jump to section</p>
+        <div class="jump-nav-links">
+          <a href="#overview">Overview</a>
+          <a href="#who-its-for">Who This Is For</a>
+          <a href="#what-you-need">What You Need</a>
+          <a href="#steps">Step-by-Step Guide</a>
+          <a href="#when-to-stop">When To Stop</a>
+          <a href="#ddrescue">ddrescue Commands</a>
+          <a href="#rstudio">R-Studio Recovery</a>
+          <a href="#common-mistakes">Common Mistakes</a>
+          <a href="#faq">FAQ</a>
+          <a href="#get-help">Get Help</a>
+        </div>
+      </nav>
+
+      <!-- ══════════════════════════════════ OVERVIEW ══════════════════════════════════════ -->
+      <section id="overview" aria-labelledby="overview-heading">
+        <h2 id="overview-heading">Overview</h2>
+        <div class="card">
+          <p>
+            This page pairs the free interactive hard drive diagnostic tool above with a complete
+            written recovery guide. The tool walks you through your drive's symptoms — how it sounds
+            when powered on, whether it's detected, and what CrystalDiskInfo reports — then routes
+            you to the safest course of action.
+          </p>
+          <p>
+            The written guide covers everything the wizard teaches: how to identify your drive's
+            failure type, how to create a bootable recovery USB on Windows, how to run a two-pass
+            ddrescue clone, how to scan the clone with R-Studio, and — critically — when DIY
+            recovery is no longer safe and professional cleanroom help is the only option.
+          </p>
+          <p>
+            The central principle throughout is <strong style="color: var(--text);">clone first,
+            recover from the copy.</strong> Running repair tools or file recovery software directly
+            on a failing drive is one of the most common ways people permanently lose data they
+            could have recovered.
+          </p>
+        </div>
+
+        <div class="callout callout-success" style="margin-top: 14px;">
+          <h4>Good news — if your drive spins and stays spinning</h4>
+          <p style="color: #86efac; margin-top: 8px; font-size: 15px;">
+            If the drive powers on, spins up, stays spinning, and is detected by the computer,
+            there is a strong chance your data can be recovered with the DIY clone-first approach
+            described here. The wizard will confirm this after you check the drive's health in
+            CrystalDiskInfo. SMART status of Good or Caution means DIY recovery is worth attempting.
+          </p>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════ WHO ITS FOR ════════════════════════════════════ -->
+      <section id="who-its-for" aria-labelledby="who-heading">
+        <h2 id="who-heading">Who This Is For</h2>
+        <div class="card">
+          <p>This guide is written for people who:</p>
+          <ul class="checklist">
+            <li>Have a failing hard drive and want to understand what is wrong before spending money on professional recovery.</li>
+            <li>Are comfortable following detailed, step-by-step technical instructions — no prior Linux experience required.</li>
+            <li>Have access to a <strong style="color: var(--text);">Windows PC</strong> for creating a bootable USB and running recovery software.</li>
+            <li>Have or can obtain a second empty drive (same size or larger) to use as a clone target.</li>
+            <li>Are willing to take the time — cloning can take many hours or days, and rushing it risks losing data.</li>
+            <li>Want to try a careful DIY approach before considering professional services.</li>
+          </ul>
+          <p style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
+            This guide is <strong style="color: var(--danger);">not appropriate</strong> for drives
+            that are clicking, not spinning, or spinning up then immediately shutting down. Those
+            symptoms indicate physical hardware failure requiring cleanroom professional recovery.
+            See the <a href="#when-to-stop">When To Stop section</a> below.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════ WHAT YOU NEED ════════════════════════════════════ -->
+      <section id="what-you-need" aria-labelledby="whatyouneed-heading">
+        <h2 id="whatyouneed-heading">What You Need Before Starting</h2>
+        <div class="card">
+          <p style="margin-bottom: 14px;">Gather everything on this checklist before moving forward. Do not begin without all of them.</p>
+          <ul class="checklist">
+            <li>
+              <strong style="color: var(--text);">A working Windows computer</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Required for creating the boot USB and running R-Studio. Mac cannot be used to create the SystemRescue USB in this guide.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">USB flash drive, 8 GB or larger</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Will be completely erased and turned into a bootable SystemRescue drive.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">A new, empty target drive</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Same size or larger than your failing drive. This is where ddrescue writes the clone. It will be completely overwritten — confirm it contains nothing important.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">The failing patient drive</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Handle it carefully. Minimize power cycles — each one risks additional damage.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">SATA docking station or USB-to-SATA adapter</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">3.5-inch drives need a powered docking station. 2.5-inch SATA drives can use a USB adapter cable. USB-native drives (soldered USB) use their original cable.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">Time and patience</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Cloning a large or damaged drive can take many hours or even days. Do not interrupt the process.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">Stable power throughout</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">Keep a laptop plugged in for the entire clone operation. On a desktop, a UPS (uninterruptible power supply) is ideal — a power loss mid-clone can force you to restart from the beginning.</span>
+            </li>
+            <li>
+              <strong style="color: var(--text);">A destination for recovered files</strong>
+              <span style="font-size: 13px; display: block; margin-top: 2px;">A separate external drive is recommended. Alternatively, your computer's internal drive works if it has enough free space. This must be separate from the clone and the patient drive.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="callout callout-caution" style="margin-top: 14px;">
+          <h4>Windows Only <span class="tag-win">Windows</span></h4>
+          <p style="color: #fde68a; margin-top: 8px; font-size: 15px;">
+            Creating the SystemRescue bootable USB requires a Windows computer and Rufus.
+            This specific process is not supported on macOS. If you only have a Mac,
+            borrow a Windows PC for this step before continuing.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════ STEP-BY-STEP ══════════════════════════════════════ -->
+      <section id="steps" aria-labelledby="steps-heading">
+        <h2 id="steps-heading">Step-by-Step Recovery Guide</h2>
+
+        <!-- ── Group: Prepare ── -->
+        <div class="step-group">
+          <p class="step-group-label">Prepare</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">1</div>
+            <div class="step-body">
+              <h4>Understand how your drive works</h4>
+              <p>Hard drives store data on spinning platters. Tiny read/write heads float nanometers above the platter surface while reading and writing. If the drive is unstable, repeated power cycling or heavy scanning can cause the heads to contact the platters and permanently scratch away data.</p>
+              <p class="step-stop">Do not keep unplugging and replugging the drive. Do not run repair tools before completing the diagnostic.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">2</div>
+            <div class="step-body">
+              <h4>Remove from external enclosure (if applicable)</h4>
+              <p>If your drive is inside a plastic external enclosure, open the shell to reach the bare drive. Look for screws hidden under rubber feet or stickers. Use a plastic spudger to gently pry along the seam — go slow and work around the edges.</p>
+              <p class="step-stop">Only open the outer plastic enclosure — never open the metal hard drive itself. Avoid metal tools near the PCB circuit board on the underside of the drive.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">3</div>
+            <div class="step-body">
+              <h4>Remove the USB adapter board (if present)</h4>
+              <p>Some drives in external enclosures have a removable USB-to-SATA bridge board attached to the bottom. Disconnecting it exposes the standard SATA connectors (two L-shaped ports). If the USB port is soldered directly onto the drive's main circuit board, leave it alone and recover using USB.</p>
+              <p class="step-stop">Do NOT attempt to desolder or modify the main circuit board in any way.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">4</div>
+            <div class="step-body">
+              <h4>Connect the drive safely</h4>
+              <p>Use the right connection for your drive: a powered docking station for 3.5-inch desktop drives, a SATA-to-USB adapter for 2.5-inch SATA drives, or the original USB cable for drives with a soldered USB port. A stable connection is essential — loose adapters can disconnect mid-clone and corrupt the log file.</p>
+              <p class="step-stop">Do not click Format, Initialize Disk, or Repair prompts. Do not run CHKDSK on the patient drive.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">5</div>
+            <div class="step-body">
+              <h4>Perform the listen test</h4>
+              <p>Power on the drive and listen carefully. The sound pattern is the fastest indicator of failure type: not spinning (likely PCB or motor), clicking (head failure), spinning up then down (head failure, drive self-protecting), or spinning and staying spinning (most favorable — software recovery may work).</p>
+              <p class="step-stop">Do not keep power-cycling to repeat the test. One or two power-ons is enough. Do not open the sealed drive enclosure.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">6</div>
+            <div class="step-body">
+              <h4>Check SMART health with CrystalDiskInfo <span class="tag-win">Windows</span></h4>
+              <p>If the drive spins and stays spinning, download CrystalDiskInfo (Windows only, free), install it, and open it. Find your drive and note the health status: Good, Caution, Bad, or not detected. Only proceed with DIY cloning if the status is Good or Caution.</p>
+              <p class="step-warn">If CrystalDiskInfo shows Bad or the drive does not appear in the list, stop here. See the When To Stop section below — no DIY path is safe for either of those outcomes.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── Group: Create USB ── -->
+        <div class="step-group">
+          <p class="step-group-label">Create the Boot USB — Windows Only</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">7</div>
+            <div class="step-body">
+              <h4>Download SystemRescue ISO and Rufus <span class="tag-win">Windows</span></h4>
+              <p>Download the SystemRescue ISO from <strong style="color: var(--text);">system-rescue.org</strong> and Rufus from <strong style="color: var(--text);">rufus.ie</strong>. Both are free. A Windows computer is required for this step — creating the USB on a Mac is not supported in this guide. If you only have a Mac, borrow a Windows PC.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">8</div>
+            <div class="step-body">
+              <h4>Flash the USB with Rufus</h4>
+              <p>Insert your USB flash drive. Open Rufus, click Select and choose the SystemRescue ISO you downloaded. Click Start. Accept any warning about erasing the USB contents. Wait until Rufus reports it has finished — do not remove the USB early. Everything currently on the flash drive will be erased.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── Group: Boot and identify ── -->
+        <div class="step-group">
+          <p class="step-group-label">Boot and Identify Drives</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">9</div>
+            <div class="step-body">
+              <h4>Boot from the SystemRescue USB</h4>
+              <p>With the USB plugged in, restart the computer. As the manufacturer logo appears, immediately press your boot menu key. Common keys by brand: Dell <kbd>F12</kbd>, HP <kbd>F9</kbd> or <kbd>Esc</kbd>, Lenovo <kbd>F12</kbd>, ASUS <kbd>F8</kbd>, Acer <kbd>F12</kbd>, MSI <kbd>F11</kbd>, Gigabyte <kbd>F12</kbd>. Select the USB from the boot menu, press Enter, then choose the default SystemRescue option. You will arrive at a command-line prompt.</p>
+              <p class="step-warn">If the boot menu does not appear, try tapping the key rapidly as the screen first turns on. If Secure Boot is blocking it, disable it temporarily in your BIOS settings.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">10</div>
+            <div class="step-body">
+              <h4>Identify your drives with <code>lsblk</code></h4>
+              <p>At the command prompt, type <code>lsblk</code> and press Enter. This lists every connected drive with its device name (like <code>/dev/sda</code>, <code>/dev/sdb</code>) and size. Match your patient drive and target drive to their known sizes. Write down the exact device names on paper before touching anything else.</p>
+              <p class="step-stop">⛔ NEVER GUESS. If you are not 100% certain which drive is which — stop, power off, and connect only one drive at a time to confirm. Cloning to the wrong drive permanently and irreversibly destroys its data.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── Group: Clone ── -->
+        <div class="step-group">
+          <p class="step-group-label">Clone with ddrescue</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">11</div>
+            <div class="step-body">
+              <h4>Run ddrescue Pass 1 — fast copy</h4>
+              <p>Type the command below and press Enter. Replace <code>sdX</code> with your patient drive name and <code>sdY</code> with your target drive name from the previous step. Let Pass 1 run until it finishes on its own — do not interrupt it.</p>
+              <pre><code>ddrescue -f -n /dev/sdX /dev/sdY rescue.log</code></pre>
+              <p>Pass 1 copies all readable sectors quickly while skipping difficult ones, minimizing stress on the failing drive. The <code>rescue.log</code> file tracks progress and enables safe resume.</p>
+              <p class="step-stop">Double-check drive names before pressing Enter. The target drive (<code>sdY</code>) will be completely overwritten with no confirmation prompt.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">12</div>
+            <div class="step-body">
+              <h4>Run ddrescue Pass 2 — retry difficult sectors</h4>
+              <p>After Pass 1 finishes, run the command below. This retries sectors that could not be read in Pass 1. The same <code>rescue.log</code> is reused — ddrescue picks up exactly where it left off. This pass can take many hours or days on a heavily damaged drive.</p>
+              <pre><code>ddrescue -d -f -r3 /dev/sdX /dev/sdY rescue.log</code></pre>
+              <p class="step-stop">If the patient drive starts clicking loudly during cloning, press <kbd>Ctrl+C</kbd> immediately, disconnect the patient drive, and contact a professional recovery lab.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── Group: Scan ── -->
+        <div class="step-group">
+          <p class="step-group-label">Scan the Clone with R-Studio</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">13</div>
+            <div class="step-body">
+              <h4>Prepare for file recovery</h4>
+              <p>When ddrescue is done: shut the computer down completely (do not just restart). Disconnect the patient drive and set it aside safely — do not reconnect it. Remove the SystemRescue USB. Boot normally into Windows. Then connect the cloned drive as an external secondary drive via a USB docking station or enclosure.</p>
+              <p class="step-stop">Do NOT boot from the clone. Do NOT allow Windows to scan and fix or repair the clone — click Cancel on any repair prompt immediately. Every write to the clone risks overwriting data you have not yet recovered.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">14</div>
+            <div class="step-body">
+              <h4>Install and open R-Studio <span class="tag-win">Windows</span></h4>
+              <p>Download and install R-Studio from <strong style="color: var(--text);">r-studio.com</strong> (Windows only, free trial available). Open it. In the left panel, find your cloned drive by its drive letter or size. Do NOT select your Windows system drive (usually C:) or the destination drive.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">15</div>
+            <div class="step-body">
+              <h4>Scan the cloned drive</h4>
+              <p>Click Scan with all settings left at their defaults — R-Studio automatically chooses the best options. Wait for the full scan to complete. Depending on drive size this can take 30 minutes to several hours. Do not interrupt it.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── Group: Recover ── -->
+        <div class="step-group">
+          <p class="step-group-label">Recover Files to a Safe Destination</p>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">16</div>
+            <div class="step-body">
+              <h4>Browse results and select files</h4>
+              <p>R-Studio shows a folder tree of what it found. Look for folders that match your data — Documents, Desktop, Photos, and so on. Check the boxes next to what you want to recover. Prioritize the most important files first. If files have unusual names like <code>$Recf0001</code>, browse inside them — the content may be intact even if the directory entry was lost.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">17</div>
+            <div class="step-body">
+              <h4>Recover to a safe destination</h4>
+              <p>Click Recover and choose where to save the files. Use a separate external drive (recommended) or your computer's internal drive if it has enough free space. Neither the cloned drive nor the patient drive are valid destinations. Wait for recovery to finish, then open the destination folder and verify your files can be opened.</p>
+              <p class="step-stop">Never save recovered files back onto the cloned drive or the original patient drive. Writing to the clone overwrites sectors containing data you have not yet recovered — and once overwritten, that data is permanently gone.</p>
+            </div>
+          </article>
+        </div>
+
+      </section>
+
+      <!-- ═══════════════════════════════ WHEN TO STOP ═══════════════════════════════════ -->
+      <section id="when-to-stop" aria-labelledby="stop-heading">
+        <h2 id="stop-heading">When To Stop — Hard-Stop Conditions</h2>
+        <p style="margin-bottom: 24px;">
+          Five conditions require you to stop all DIY activity immediately. Software tools cannot
+          help in any of these cases, and continued attempts will reduce — or permanently eliminate —
+          the chance of successful professional recovery.
+        </p>
+
+        <!-- STOP 1: Not Spinning -->
+        <div class="stop-card" role="region" aria-label="Hard stop: drive not spinning">
+          <span class="stop-label">Hard Stop</span>
+          <h3>Drive Is Not Spinning</h3>
+          <p style="margin-top: 8px; margin-bottom: 14px;">
+            A drive that does not spin at all cannot be helped by any software tool. This is a
+            hardware-level failure requiring professional equipment.
+          </p>
+          <ul>
+            <li><strong>Most common cause — PCB failure:</strong> The printed circuit board (the green electronics board on the drive's underside) has failed. The motor never receives a start signal.</li>
+            <li><strong>Also possible — seized spindle motor:</strong> The motor inside the drive has physically seized and cannot rotate the platters. Requires cleanroom disassembly.</li>
+            <li><strong>Why DIY PCB swaps do not work:</strong> Every drive PCB contains a ROM chip storing unique adaptive calibration data for that specific drive. Swapping a donor board without transferring the ROM will fail — the drive will not recognize its own platters.</li>
+            <li><strong>Modern drives (post-2013) add another complication:</strong> Many store adaptive data in the MCU (microcontroller unit) rather than a separate ROM chip. MCU transfer requires BGA rework equipment — far beyond any DIY capability.</li>
+            <li><strong>If the ROM chip is physically damaged:</strong> Recovery may be impossible, even by professionals.</li>
+            <li><strong>Motor seizure:</strong> Opening the drive to address this requires an ISO-5 certified cleanroom (10,000 times cleaner than typical indoor air). A single dust particle on the platters during disassembly can destroy all data permanently.</li>
+          </ul>
+          <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
+            Stop powering the drive on and off. Each power cycle applies stress to an already-failed
+            component and can worsen the damage. Your data is very likely still on the platters —
+            but only a professional recovery lab can reach it.
+          </p>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
+          </div>
+        </div>
+
+        <!-- STOP 2: Clicking -->
+        <div class="stop-card" role="region" aria-label="Hard stop: clicking drive">
+          <span class="stop-label">Hard Stop</span>
+          <h3>Drive Is Clicking</h3>
+          <p style="margin-top: 8px; margin-bottom: 14px;">
+            Clicking is one of the clearest signs of a read/write head failure. The actuator arm
+            is stuck in a loop: attempting to position the heads, failing, resetting, and trying
+            again. This is a physical and mechanical failure — no software command can fix it.
+          </p>
+          <ul>
+            <li><strong>What is happening:</strong> One or more read/write heads have failed. The drive cannot complete its startup or find the data it is looking for.</li>
+            <li><strong>Why each power cycle makes it worse:</strong> When a drive with a failed head spins up, the head can drag across the platter surface instead of floating above it. This physically scratches the magnetic coating where your data is stored. Even a single additional power cycle can reduce how much is recoverable.</li>
+            <li><strong>Why software tools cannot help:</strong> ddrescue and R-Studio communicate with the drive through the operating system. If the heads cannot read the system area, the drive is either invisible to the OS or goes offline almost immediately. There is no software workaround for a hardware head failure.</li>
+            <li><strong>What professional recovery involves:</strong> The head stack assembly is replaced in a certified cleanroom with a matched set from a compatible donor drive. Once working heads are installed, technicians image the drive sector by sector and extract your files.</li>
+          </ul>
+          <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
+            Stop powering the drive on. Do not run scans or cloning attempts. Do not open the
+            drive outside a cleanroom. Contact a professional immediately — the fewer additional
+            power cycles, the better your chances.
+          </p>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
+          </div>
+        </div>
+
+        <!-- STOP 3: Spins up then down -->
+        <div class="stop-card" role="region" aria-label="Hard stop: spins up then spins down">
+          <span class="stop-label">Hard Stop</span>
+          <h3>Drive Spins Up Then Spins Down</h3>
+          <p style="margin-top: 8px; margin-bottom: 14px;">
+            The drive starts its startup sequence, attempts to initialize the read/write heads,
+            fails, and shuts itself down to avoid further damage. This is the drive's built-in
+            self-protection mechanism activating.
+          </p>
+          <ul>
+            <li><strong>Most common cause:</strong> One or more read/write heads have failed and cannot read the drive's internal system area. Without reading that information, startup cannot complete.</li>
+            <li><strong>Why software tools cannot help:</strong> ddrescue and R-Studio need the drive to stay online and stable. This drive powers down before any data transfer can begin — there is nothing for the software to work with.</li>
+            <li><strong>Why continued power cycles cause more damage:</strong> Every spin-up attempt forces the failing heads across the platters. Each attempt risks scratching the magnetic surface where your data is stored.</li>
+            <li><strong>What is required:</strong> Cleanroom head stack replacement using a precisely matched compatible donor drive.</li>
+          </ul>
+          <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
+            Stop all DIY attempts. Do not run scans. Do not open the drive outside a cleanroom.
+            The sooner the drive is evaluated by a professional, the better your recovery chances.
+          </p>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
+          </div>
+        </div>
+
+        <!-- STOP 4: Not detected -->
+        <div class="stop-card" style="border-color: rgba(96,165,250,0.38); background: rgba(96,165,250,0.07);" role="region" aria-label="Hard stop: drive not detected">
+          <span class="stop-label" style="background: #60a5fa; color: #0d0f18;">Hard Stop</span>
+          <h3 style="color: #93c5fd;">Drive Not Detected — Including Not Visible in CrystalDiskInfo</h3>
+          <p style="margin-top: 8px; margin-bottom: 14px; color: #bfdbfe;">
+            If the drive does not appear in CrystalDiskInfo or is not recognized by the computer
+            at all, the computer is not communicating with it — and DIY software cannot help a
+            drive the OS cannot see.
+          </p>
+          <ul style="color: #bfdbfe;">
+            <li><strong style="color: #93c5fd;">Cause 1 — Failing USB-to-SATA bridge:</strong> External USB drives contain a bridge board that converts the SATA signal to USB. If this bridge is failing, the drive may not be detected even though the drive itself is fine. Try bypassing the enclosure and connecting the drive directly via SATA. If it appears via direct SATA, the bridge was the problem.</li>
+            <li><strong style="color: #93c5fd;">Cause 2 — Firmware or translation issue:</strong> Internal firmware problems can prevent the drive from identifying correctly, even on a direct SATA connection. Firmware-level diagnosis and recovery requires professional tools.</li>
+          </ul>
+          <p style="margin-top: 16px; font-weight: 700; color: #60a5fa;">
+            Do not keep unplugging, replugging, or power cycling the drive. Do not run scans or
+            cloning attempts if the drive is not detected — they will find nothing and risk
+            additional stress on the hardware.
+          </p>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
+          </div>
+        </div>
+
+        <!-- STOP 5: Bad SMART -->
+        <div class="stop-card" role="region" aria-label="Hard stop: CrystalDiskInfo Bad status">
+          <span class="stop-label">Hard Stop</span>
+          <h3>CrystalDiskInfo Reports "Bad"</h3>
+          <p style="margin-top: 8px; margin-bottom: 14px;">
+            A Bad SMART status means one or more critical health attributes have exceeded their
+            failure threshold. The drive is actively failing.
+          </p>
+          <ul>
+            <li>Continuing DIY recovery on a drive in Bad health can permanently destroy data that would otherwise be recoverable.</li>
+            <li>Running file recovery software directly on a drive in this state is not safe — each additional read operation stresses the drive further.</li>
+            <li>Professional recovery is strongly recommended. Do not attempt further DIY.</li>
+          </ul>
+          <p style="margin-top: 16px; font-weight: 700; color: var(--danger);">
+            Do not continue DIY. Professional evaluation is needed before the drive degrades further.
+          </p>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Recovery Quote</a>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ════════════════════════════════ DDRESCUE ════════════════════════════════════════ -->
+      <section id="ddrescue" aria-labelledby="ddrescue-heading">
+        <h2 id="ddrescue-heading">ddrescue Commands</h2>
+
+        <div class="card" style="margin-bottom: 14px;">
+          <h3>What is ddrescue?</h3>
+          <p>
+            GNU ddrescue is a data recovery tool that creates a sector-level copy of a failing
+            drive onto a healthy target drive. Unlike a regular file copy, ddrescue skips
+            difficult sectors on the first pass to avoid prolonged stress, then retries them in
+            a targeted second pass. It saves a log file so the operation can be safely paused and
+            resumed without re-copying data already transferred.
+          </p>
+          <p>
+            ddrescue runs from a bootable Linux environment. This guide uses SystemRescue, which
+            includes ddrescue pre-installed. It does not run from within Windows.
+          </p>
+          <p style="color: var(--text-dim); font-size: 13px; margin-top: 8px;">
+            Note: the commands below are examples. Always verify the correct device names on your
+            specific machine using <code>lsblk</code> before running either command.
+          </p>
+        </div>
+
+        <div class="callout callout-danger">
+          <h4>⛔ Critical — Do Not Mix Up Patient and Target</h4>
+          <p style="color: #fca5a5; margin-top: 8px; font-size: 15px;">
+            In the commands below, <code>sdX</code> is always the <strong>patient drive</strong>
+            (source — your failing drive). <code>sdY</code> is always the <strong>target drive</strong>
+            (destination — your empty clone drive). <strong>Reversing these two arguments will
+            completely and permanently erase your patient drive.</strong> ddrescue starts immediately
+            with no confirmation prompt. Confirm device names with <code>lsblk</code> first.
+          </p>
+        </div>
+
+        <div class="card" style="margin-bottom: 14px;">
+          <h3>Pass 1 — Fast Copy (No Retries)</h3>
+          <p>
+            Run this first. It copies all readable sectors quickly and skips sectors that are
+            difficult to read, minimizing the number of times the failing drive is stressed.
+            Let it run until it finishes on its own — do not interrupt it.
+          </p>
+          <pre><code>ddrescue -f -n /dev/sdX /dev/sdY rescue.log</code></pre>
+          <ul style="padding-left: 18px; color: var(--text-muted); font-size: 14px; line-height: 1.85; margin-top: 12px;">
+            <li><code>-f</code> — Force overwrite of the target (required when writing to a whole disk device).</li>
+            <li><code>-n</code> — No scraping: skip bad sectors on this pass rather than retrying them.</li>
+            <li><code>rescue.log</code> — Progress log file. Tracks which sectors have been copied. Enables safe pause and resume.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="margin-bottom: 14px;">
+          <h3>Pass 2 — Retry Difficult Sectors</h3>
+          <p>
+            After Pass 1 finishes, run this second command. It targets only the sectors that
+            could not be read during Pass 1. The same <code>rescue.log</code> is reused —
+            ddrescue resumes exactly where it left off. This pass can take many hours or days
+            on a heavily damaged drive.
+          </p>
+          <pre><code>ddrescue -d -f -r3 /dev/sdX /dev/sdY rescue.log</code></pre>
+          <ul style="padding-left: 18px; color: var(--text-muted); font-size: 14px; line-height: 1.85; margin-top: 12px;">
+            <li><code>-d</code> — Direct disc access: bypasses the OS read cache for more accurate sector-level reads.</li>
+            <li><code>-r3</code> — Retry each bad sector up to 3 times before giving up on it.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-caution">
+          <h4>Practical Notes</h4>
+          <ul style="padding-left: 18px; color: #fde68a; font-size: 14px; line-height: 1.9; margin-top: 8px;">
+            <li>If ddrescue appears stuck on one sector for 30 minutes or more, you can safely press <kbd>Ctrl+C</kbd> and run Pass 2 directly — it will retry those stuck areas.</li>
+            <li>If the patient drive disconnects mid-clone, stop ddrescue (<kbd>Ctrl+C</kbd>), reconnect it firmly, and run the same command again. The log file enables safe resume without re-copying already-transferred data.</li>
+            <li>If the patient drive begins clicking loudly during cloning, stop immediately, disconnect the patient drive, and contact a professional recovery lab.</li>
+            <li>The target drive must be the same size or larger than the patient drive. Even drives advertised with the same capacity from different manufacturers may differ by a few gigabytes.</li>
+            <li>Keep your laptop plugged in throughout — a power loss mid-clone may require restarting from the beginning.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════ R-STUDIO ════════════════════════════════════════ -->
+      <section id="rstudio" aria-labelledby="rstudio-heading">
+        <h2 id="rstudio-heading">R-Studio Recovery Guide</h2>
+
+        <div class="card" style="margin-bottom: 14px;">
+          <p>
+            R-Studio is a professional file recovery application for Windows. After ddrescue has
+            finished cloning, you connect the cloned drive to your Windows machine and use R-Studio
+            to scan it, find deleted or lost files, and extract them to a safe destination. You
+            always work from the clone — the original patient drive remains disconnected throughout
+            this entire process.
+          </p>
+        </div>
+
+        <div class="callout callout-danger" style="margin-bottom: 14px;">
+          <h4>Setup Required Before Opening R-Studio</h4>
+          <ul style="padding-left: 18px; margin-top: 10px; color: #fca5a5; font-size: 15px; line-height: 1.85;">
+            <li>The <strong>patient drive must be disconnected</strong> and stored safely before you begin.</li>
+            <li>The <strong>cloned drive must be connected externally</strong> via a USB docking station or enclosure — not installed internally, and not used as a boot drive.</li>
+            <li>If Windows prompts you to scan or repair the drive when you plug it in, <strong>click Cancel immediately</strong>. Allowing automatic repair can overwrite data you have not yet recovered.</li>
+          </ul>
+        </div>
+
+        <div class="step-group" style="margin-bottom: 0;">
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">1</div>
+            <div class="step-body">
+              <h4>Download and install R-Studio <span class="tag-win">Windows</span></h4>
+              <p>Get R-Studio from <strong style="color: var(--text);">r-studio.com</strong>. A free trial lets you preview what is recoverable before purchasing. Install it on your Windows machine (not on the cloned drive).</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">2</div>
+            <div class="step-body">
+              <h4>Select the cloned drive</h4>
+              <p>In R-Studio's left panel, find the cloned drive by its drive letter (D:, E:, etc.) or its size. Do NOT select your Windows system drive (usually C:) and do not select the destination drive where you plan to save recovered files.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">3</div>
+            <div class="step-body">
+              <h4>Scan with default settings</h4>
+              <p>Click Scan. R-Studio automatically selects the best scan settings for the drive — you do not need to change anything. Wait for the scan to complete fully. This can take 30 minutes to several hours. Do not interrupt it.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">4</div>
+            <div class="step-body">
+              <h4>Browse results and select files</h4>
+              <p>Browse the folder tree and locate your data — Documents, Desktop, Photos, and similar folders. Check the boxes next to files and folders you want. Prioritize the most important data first. Files with unusual names (like <code>$Recf0001</code>) may still contain intact content — browse inside them and check thumbnail previews for images.</p>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-num" aria-hidden="true">5</div>
+            <div class="step-body">
+              <h4>Recover to a safe destination</h4>
+              <p>Click Recover and choose your destination: a separate external drive (recommended), or your computer's internal drive if it has enough free space. Wait for recovery to finish, then verify the files can be opened.</p>
+              <p class="step-stop">Never save recovered files back onto the cloned drive or the original patient drive. Saving to the clone overwrites sectors that may contain data you have not yet recovered — those sectors are then permanently gone.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="callout callout-caution" style="margin-top: 14px;">
+          <h4>Three Drives, Three Roles — Keep Them Separate</h4>
+          <ul style="padding-left: 18px; color: #fde68a; font-size: 14px; line-height: 1.9; margin-top: 8px;">
+            <li><strong style="color: var(--text);">Patient drive</strong> — disconnected and stored safely. Do not touch it again.</li>
+            <li><strong style="color: var(--text);">Cloned drive</strong> — connected externally via USB dock. Scanned by R-Studio. Read-only — do not save anything to it.</li>
+            <li><strong style="color: var(--text);">Destination drive</strong> — a separate external drive, or your internal drive if it has enough free space. This is where recovered files land.</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-caution" style="margin-top: 14px;">
+          <h4>If R-Studio Shows No Files or an Empty Result</h4>
+          <p style="color: #fde68a; margin-top: 8px; font-size: 14px;">
+            The partition table may be corrupted. In R-Studio, try the "Find Previous File System"
+            option or switch the scan type to "Extra Found Files." If the drive still shows nothing
+            after trying both, the damage may be more severe than software can address — see
+            the <a href="#get-help" style="color: var(--caution);">Get Help section</a> for
+            professional recovery options.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════ COMMON MISTAKES ════════════════════════════════════ -->
+      <section id="common-mistakes" aria-labelledby="mistakes-heading">
+        <h2 id="mistakes-heading">Common Mistakes to Avoid</h2>
+        <div class="mistake-grid">
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Running CHKDSK on the patient drive</h4>
+            <p>CHKDSK writes to the drive and can overwrite recoverable data. It also corrupts file system structures that recovery software uses to find files. Never run it on the patient drive — only on the clone if needed.</p>
+          </article>
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Repeated power cycling</h4>
+            <p>Every time you power on a damaged drive, you risk additional mechanical damage. For clicking or spins-down drives, each power cycle can reduce how much data is recoverable or make recovery impossible.</p>
+          </article>
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Saving recovered files back onto the clone</h4>
+            <p>The clone must stay read-only throughout recovery. Writing files to it overwrites sectors that may still contain data you have not yet recovered — and those sectors are gone permanently once overwritten.</p>
+          </article>
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Mixing up patient and target drives</h4>
+            <p>Reversing source and destination in a ddrescue command erases the patient drive with no warning or undo. Always confirm device names with <code>lsblk</code> and physically label both drives with tape if there is any risk of confusion.</p>
+          </article>
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Using an unstable USB adapter for cloning</h4>
+            <p>A loose or cheap USB cable can disconnect mid-clone. If the connection drops during the process, the log file may become inconsistent. Use a SATA docking station whenever possible for a stable, reliable connection.</p>
+          </article>
+
+          <article class="mistake-card">
+            <span class="mistake-icon" aria-hidden="true">⛔</span>
+            <h4>Accepting Windows "Scan and Fix" on the clone</h4>
+            <p>When you plug in the cloned drive in Windows, a prompt may offer to scan and fix it. Click Cancel immediately. Allowing Windows to repair the clone can destroy the file structure that R-Studio needs to recover your files.</p>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════ FAQ ═════════════════════════════════════════ -->
+      <section id="faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading">Frequently Asked Questions</h2>
+        <ul class="faq-list" role="list">
+
+          <li class="faq-item">
+            <details>
+              <summary>What is a hard drive diagnostic tool?</summary>
+              <p>A hard drive diagnostic tool is software or an interactive guide that helps you identify what is wrong with a failing hard drive. It evaluates symptoms like spinning behavior, unusual sounds, SMART health status, and whether the drive is detected — then routes you to the safest recovery path or advises professional help when DIY is not viable.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>Why should I clone the drive before recovering files?</summary>
+              <p>Scanning or recovering files directly from a failing patient drive stresses it further and can permanently overwrite sectors still containing recoverable data. Cloning first with ddrescue creates a stable copy you can work from repeatedly. All file recovery happens on the clone — the original patient drive is never touched again after cloning.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What should I do if my hard drive is clicking?</summary>
+              <p>Stop powering the drive on immediately. Clicking is a clear sign of a read/write head failure. Each additional power cycle risks the failed head dragging across the platter surface and permanently scratching away data. Software recovery tools cannot address a hardware head failure. Professional cleanroom head-stack replacement using a matched donor drive is required.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What should I do if my hard drive is not spinning?</summary>
+              <p>A non-spinning drive indicates PCB (circuit board) failure or a seized spindle motor. DIY PCB swaps require matching a donor board exactly and transferring the ROM chip — and on many modern drives, the MCU. Both require professional microsoldering or BGA rework equipment. Motor seizure requires cleanroom disassembly. Stop all power cycles and contact a professional recovery service.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What if my drive spins up then spins down?</summary>
+              <p>This means the drive's startup sequence is failing because the read/write heads cannot initialize. The drive shuts itself down as a self-protection mechanism. Software tools cannot help because the drive powers down before any data transfer can begin. Professional cleanroom head replacement is required. Do not continue powering the drive on.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What if my drive is not detected in CrystalDiskInfo?</summary>
+              <p>If the drive does not appear, the computer is not communicating with it. For external drives, remove the drive from the enclosure and try connecting it directly via SATA — the USB bridge may be failing. If it still does not appear via SATA, firmware issues or deeper hardware failure are likely. Do not continue DIY attempts; professional evaluation is needed.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>Can I save recovered files to my computer's internal drive?</summary>
+              <p>Yes, as long as the internal drive has enough available free space. The critical rule is: never save recovered files to the cloned drive or the original patient drive. A separate external drive is the recommended destination, but your internal drive is also valid if it has sufficient space — as long as it is neither the clone nor the patient.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What is ddrescue and how does it differ from a regular copy?</summary>
+              <p>GNU ddrescue creates a sector-level image of a failing drive onto a healthy target. Unlike a file copy, it skips problematic sectors on the first pass to minimize stress, retries them in a second pass, and saves a log file so the process can be paused and resumed safely. It is designed specifically to extract the maximum amount of data from a damaged drive.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What does "Bad" in CrystalDiskInfo mean?</summary>
+              <p>A Bad SMART status means one or more of the drive's critical health attributes have exceeded their failure threshold — for example, too many reallocated sectors or pending uncorrectable errors. The drive is actively failing. Continuing DIY recovery on a drive in this state can permanently destroy data that would otherwise be recoverable. Professional recovery is strongly recommended.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>Should I run CHKDSK to try to fix my drive?</summary>
+              <p>Never run CHKDSK on the original patient drive. CHKDSK writes to the drive, which can overwrite recoverable sectors and corrupt the file system structures that recovery software relies on. If CHKDSK is needed at all, run it only on the cloned copy after the clone is complete — never on the original failing drive.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>Do you offer cleanroom data recovery?</summary>
+              <p>Yes. MDRepairs offers professional data recovery services including cleanroom head stack replacement for mechanically failed drives, PCB repair and ROM/MCU transfer for non-spinning drives, and firmware-level recovery. We offer a free evaluation and a no-data, no-charge policy — you only pay if your data is successfully recovered.</p>
+            </details>
+          </li>
+
+          <li class="faq-item">
+            <details>
+              <summary>What are the signs that professional recovery is needed?</summary>
+              <p>Seek professional help if: ddrescue recovered less than 50% of the drive after both passes; R-Studio shows a blank, empty, or heavily corrupted file structure; the drive was clicking, beeping, or grinding at any point; the drive is not recognized by the computer; or CrystalDiskInfo reports Bad health. All of these indicate physical or firmware-level failure beyond the reach of DIY software tools.</p>
+            </details>
+          </li>
+
+        </ul>
+      </section>
+
+      <!-- ══════════════════════════════════ GET HELP ══════════════════════════════════════ -->
+      <section id="get-help" aria-labelledby="gethelp-heading">
+        <h2 id="gethelp-heading">Get Professional Help</h2>
+
+        <div class="card" style="margin-bottom: 20px;">
+          <p>
+            If the diagnostic tool or this guide has identified a failure that is beyond DIY
+            recovery, professional data recovery is the appropriate next step. MDRepairs offers
+            evaluation and recovery services for drives with physical and firmware-level failures.
+          </p>
+          <ul class="benefit-list">
+            <li>Professional cleanroom environment for head stack replacement and motor repair</li>
+            <li>PCB repair, ROM chip transfer, and MCU-level work for non-spinning drives</li>
+            <li>Firmware-level recovery and bypass for drives with identification failures</li>
+            <li>Free evaluation — no data recovered means no charge to you</li>
+          </ul>
+          <div class="cta-group">
+            <a href="#quote" class="btn btn-primary">Get a Professional Recovery Quote</a>
+            <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener" class="btn btn-secondary">Learn About Our Mail-In Recovery ↗</a>
+          </div>
+        </div>
+
+        <!-- ── Lead form ── -->
+        <div id="quote">
+          <h3 style="margin-bottom: 16px; color: var(--text);">Request a Recovery Quote</h3>
+          <div class="lead-form">
+            <p class="form-note">
+              Fill out the form below and our team will review your case and contact you via email
+              or phone. Submitting this form does not upload your data.
+            </p>
+            <form action="#" method="post" novalidate>
+              <div class="form-grid">
+
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="q-name">Full Name <span aria-hidden="true">*</span></label>
+                    <input type="text" id="q-name" name="name" autocomplete="name" placeholder="Jane Smith" required />
+                  </div>
+                  <div class="form-field">
+                    <label for="q-email">Email Address <span aria-hidden="true">*</span></label>
+                    <input type="email" id="q-email" name="email" autocomplete="email" placeholder="jane@example.com" required />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="q-phone">Phone Number <span aria-hidden="true">*</span></label>
+                    <input type="tel" id="q-phone" name="phone" autocomplete="tel" placeholder="(555) 555-5555" required />
+                  </div>
+                  <div class="form-field">
+                    <label for="q-state">Shipping State <span aria-hidden="true">*</span></label>
+                    <select id="q-state" name="state" required>
+                      <option value="">— Select state —</option>
+                      <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+                      <option>CA</option><option>CO</option><option>CT</option><option>DC</option>
+                      <option>DE</option><option>FL</option><option>GA</option><option>HI</option>
+                      <option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+                      <option>KS</option><option>KY</option><option>LA</option><option>ME</option>
+                      <option>MD</option><option>MA</option><option>MI</option><option>MN</option>
+                      <option>MS</option><option>MO</option><option>MT</option><option>NE</option>
+                      <option>NV</option><option>NH</option><option>NJ</option><option>NM</option>
+                      <option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+                      <option>OK</option><option>OR</option><option>PA</option><option>RI</option>
+                      <option>SC</option><option>SD</option><option>TN</option><option>TX</option>
+                      <option>UT</option><option>VT</option><option>VA</option><option>WA</option>
+                      <option>WV</option><option>WI</option><option>WY</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="q-model">Drive Model Number</label>
+                  <input type="text" id="q-model" name="model" placeholder="e.g. WD10EZEX, ST2000DM008 — usually printed on the drive label" />
+                </div>
+
+                <div class="form-field">
+                  <label for="q-issue">Describe the Issue and Recovery History <span aria-hidden="true">*</span></label>
+                  <textarea id="q-issue" name="issue" rows="5" placeholder="Describe what happened: any sounds heard (clicking, beeping), when it stopped working, whether the drive is detected, and what recovery steps have already been attempted (e.g. CHKDSK, ddrescue, R-Studio)." required></textarea>
+                </div>
+
+                <div class="form-submit">
+                  <button type="submit" class="btn btn-primary">Submit Recovery Quote Request →</button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
+    </div><!-- /.container -->
+  </main>
+
+  <!-- ═══════════════════════════════════════ FOOTER ══════════════════════════════════════ -->
+  <footer>
+    <div class="container">
+      <p>
+        &copy; 2026
+        <a href="https://mdrepairs.com/">MDRepairs</a>
+        &mdash;
+        Professional Data Recovery
+        &mdash;
+        <a href="https://mdrepairs.com/mail-in-repair/" target="_blank" rel="noreferrer noopener">Mail-In Recovery</a>
+      </p>
+      <p style="margin-top: 6px;">
+        This guide is provided for educational purposes. Results vary by drive condition and failure type.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
