@@ -243,15 +243,94 @@
 
       <!-- ── IFRAME EMBED ── -->
       <section class="iframe-section" aria-label="Interactive hard drive diagnostic wizard">
-        <p class="iframe-caption">Interactive tool — use the wizard below to assess your specific drive</p>
-        <div class="iframe-wrap">
-          <iframe
-            src="https://hdd-diagnostic-wizard.vercel.app/"
-            title="Hard Drive Diagnostic Tool — Interactive Step-by-Step Wizard"
-            loading="lazy"
-            allowfullscreen
-          ></iframe>
-        </div>
+        <div class="hdd-diagnostic-wrapper">
+
+          <button class="hdd-expand-btn" id="hddExpandBtn" aria-label="Expand tool to full screen">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" focusable="false"><path d="M1 1h5M1 1v5M14 1h-5M14 1v5M1 14h5M1 14v-5M14 14h-5M14 14v-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Expand Tool Full Screen
+          </button>
+
+          <p class="iframe-caption">Interactive tool — use the wizard below to assess your specific drive</p>
+          <div class="iframe-wrap">
+            <iframe
+              src="https://hdd-diagnostic-wizard.vercel.app/"
+              title="Hard Drive Diagnostic Tool — Interactive Step-by-Step Wizard"
+              loading="lazy"
+              allowfullscreen
+            ></iframe>
+          </div>
+
+          <!-- ── Full-screen modal ── -->
+          <div
+            class="hdd-modal"
+            id="hddModal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Hard Drive Diagnostic Tool — Full Screen"
+            aria-hidden="true"
+            hidden
+          >
+            <div class="hdd-modal-backdrop" id="hddModalBackdrop"></div>
+            <div class="hdd-modal-content">
+              <button class="hdd-modal-close" id="hddModalClose" aria-label="Close full screen tool">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+              <iframe
+                src="https://hdd-diagnostic-wizard.vercel.app/"
+                title="Hard Drive Diagnostic Tool — Interactive Step-by-Step Wizard — Full Screen"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <script>
+            (function () {
+              var btn      = document.getElementById('hddExpandBtn');
+              var modal    = document.getElementById('hddModal');
+              var closeBtn = document.getElementById('hddModalClose');
+              var backdrop = document.getElementById('hddModalBackdrop');
+              var lastFocus;
+
+              function openModal() {
+                lastFocus = document.activeElement;
+                modal.hidden = false;
+                modal.removeAttribute('aria-hidden');
+                document.body.style.overflow = 'hidden';
+                closeBtn.focus();
+              }
+
+              function closeModal() {
+                modal.hidden = true;
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                if (lastFocus) lastFocus.focus();
+              }
+
+              btn.addEventListener('click', openModal);
+              closeBtn.addEventListener('click', closeModal);
+              backdrop.addEventListener('click', closeModal);
+
+              document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !modal.hidden) closeModal();
+              });
+
+              modal.addEventListener('keydown', function (e) {
+                if (e.key !== 'Tab') return;
+                var focusable = Array.prototype.slice.call(
+                  modal.querySelectorAll('button, [href], iframe, [tabindex]:not([tabindex="-1"])')
+                );
+                var first = focusable[0];
+                var last  = focusable[focusable.length - 1];
+                if (e.shiftKey) {
+                  if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+                } else {
+                  if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+                }
+              });
+            })();
+          </script>
+
+        </div><!-- /.hdd-diagnostic-wrapper -->
       </section>
 
       <!-- ── JUMP NAV ── -->

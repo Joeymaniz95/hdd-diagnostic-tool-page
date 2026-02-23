@@ -618,6 +618,112 @@ summary:focus-visible {
   border-radius: 4px;
 }
 
+/* ── Full-screen modal — scoped to .hdd-diagnostic-wrapper ── */
+
+.hdd-diagnostic-wrapper {
+  position: relative;
+}
+
+@keyframes hddGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent, 0 2px 8px rgba(0,0,0,0.3); }
+  50%       { box-shadow: 0 0 14px 4px rgba(99,102,241,0.26), 0 2px 8px rgba(0,0,0,0.3); }
+}
+
+.hdd-expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 12px auto;
+  padding: 10px 22px;
+  background: var(--surface-2);
+  border: 1px solid rgba(99,102,241,0.38);
+  border-radius: 100px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  animation: hddGlowPulse 2.6s ease-in-out infinite;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.hdd-expand-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(99,102,241,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px 5px rgba(99,102,241,0.36), 0 4px 16px rgba(0,0,0,0.4);
+  animation-play-state: paused;
+}
+.hdd-expand-btn:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+  animation-play-state: paused;
+}
+
+.hdd-modal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 1000;
+  overflow: hidden;
+}
+.hdd-modal[hidden] { display: none; }
+
+.hdd-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.hdd-modal-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.hdd-modal-content iframe {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border: none;
+  display: block;
+}
+
+.hdd-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(10, 12, 20, 0.75);
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-family: var(--font);
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.hdd-modal-close:hover {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.hdd-modal-close:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }
